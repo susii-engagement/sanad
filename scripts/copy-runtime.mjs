@@ -1,4 +1,4 @@
-```js
+js
 // Copy MediaPipe and ONNX Runtime assets into public/runtime.
 // Supports package layouts that differ between installed versions.
 
@@ -37,4 +37,4 @@ if (source.endsWith('.mjs')) {
 }
 
 console.log(`MediaPipe assets copied from ${source}`);
-```
+
