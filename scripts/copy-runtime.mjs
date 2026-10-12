@@ -1,7 +1,4 @@
 
-// Copy MediaPipe and ONNX Runtime assets into public/runtime.
-// Supports package layouts that differ between installed versions.
-
 import {
   cpSync,
   existsSync,
@@ -10,31 +7,30 @@ import {
 } from 'node:fs';
 import { join } from 'node:path';
 
-const candidates = [
-  'node_modules/@mediapipe/tasks-vision/wasm',
-  'node_modules/@mediapipe/tasks-vision/vision_bundle.mjs',
-];
+const source = 'node_modules/@mediapipe/tasks-vision/wasm';
+const destination = 'public/runtime/mediapipe';
 
-const source = candidates.find((path) => existsSync(path));
+console.log('Checking MediaPipe WASM:', source);
 
-if (!source) {
+if (!existsSync(source)) {
   throw new Error(
-    'MediaPipe assets not found. Check the installed @mediapipe/tasks-vision package.'
+    'MediaPipe WASM folder is missing on Vercel. Check npm installation and lockfile.'
   );
 }
 
-const destination = 'public/runtime/mediapipe';
-mkdirSync(destination, { recursive: true });
+const files = readdirSync(source);
+console.log('MediaPipe WASM files:', files);
 
-if (source.endsWith('.mjs')) {
-  cpSync(source, join(destination, 'vision_bundle.mjs'));
-} else {
-  for (const file of readdirSync(source)) {
-    cpSync(join(source, file), join(destination, file), {
-      recursive: true,
-    });
-  }
+if (files.length === 0) {
+  throw new Error('MediaPipe WASM folder is empty.');
 }
 
-console.log(`MediaPipe assets copied from ${source}`);
+mkdirSync(destination, { recursive: true });
+
+cpSync(source, destination, {
+  recursive: true,
+  force: true,
+});
+
+console.log('MediaPipe WASM assets copied successfully.');
 
