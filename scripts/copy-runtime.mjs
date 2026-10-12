@@ -1,11 +1,40 @@
-// Copies the MediaPipe and ONNX Runtime wasm files into public/runtime so the app works offline
-// and never depends on a CDN.
-import { cpSync, mkdirSync, readdirSync } from 'node:fs';
+```js
+// Copy MediaPipe and ONNX Runtime assets into public/runtime.
+// Supports package layouts that differ between installed versions.
 
-const copy = (from, to, keep) => {
-  mkdirSync(to, { recursive: true });
-  for (const f of readdirSync(from)) if (keep(f)) cpSync(`${from}/${f}`, `${to}/${f}`);
-};
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+} from 'node:fs';
+import { join } from 'node:path';
 
-copy('node_modules/@mediapipe/tasks-vision/wasm', 'public/runtime/mediapipe', () => true);
-console.log('runtime assets copied');
+const candidates = [
+  'node_modules/@mediapipe/tasks-vision/wasm',
+  'node_modules/@mediapipe/tasks-vision/vision_bundle.mjs',
+];
+
+const source = candidates.find((path) => existsSync(path));
+
+if (!source) {
+  throw new Error(
+    'MediaPipe assets not found. Check the installed @mediapipe/tasks-vision package.'
+  );
+}
+
+const destination = 'public/runtime/mediapipe';
+mkdirSync(destination, { recursive: true });
+
+if (source.endsWith('.mjs')) {
+  cpSync(source, join(destination, 'vision_bundle.mjs'));
+} else {
+  for (const file of readdirSync(source)) {
+    cpSync(join(source, file), join(destination, file), {
+      recursive: true,
+    });
+  }
+}
+
+console.log(`MediaPipe assets copied from ${source}`);
+```
